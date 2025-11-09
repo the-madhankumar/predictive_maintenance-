@@ -1,24 +1,28 @@
-import logo from './logo.svg';
-import './App.css';
+import styled from "styled-components";
+import OverViewPanel from "./components/OverViewPanel";
+import RealTimeMonitoringPanel from "./components/RealTimeMonitoringPanel";
+
+const AppContainer = styled.div`
+  background-color: #f1f5f9;
+  min-height: 100vh;
+  padding: 40px;
+  font-family: "Roboto", sans-serif;
+`;
+
+const Title = styled.h1`
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: #111827;
+`;
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AppContainer>
+      <Title>Dashboard</Title>
+      <OverViewPanel />
+      <RealTimeMonitoringPanel/>
+    </AppContainer>
   );
 }
 
