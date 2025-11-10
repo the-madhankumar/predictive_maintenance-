@@ -3,7 +3,7 @@ import { LineChart } from "@mui/x-charts/LineChart";
 import styled from "styled-components";
 import GaugeChart from "./GaugeChart";
 import FaultDetectionPanel from "../FaultDetectionPanel";
-import chartData from "../../Data/line_chart_data.json";
+import readMachineData from "../Services/firebaseService";
 
 const RealTimeMonitoringPanelContainer = styled.div`
   display: flex;
@@ -70,17 +70,45 @@ const ChartTitle = styled.p`
 
 class RealTimeMonitoringPanel extends Component {
     state = {
-        Voltage: 13.8,
-        RPM: 900,
+        Voltage: 0,
+        RPM: 1200,
         PowerFactor: 0.95,
+        currentList: [],
+        temperatureList: [],
+        vibrationList: [],
         current: true,
         temperature: false,
         vibration: false,
-        chartData: null,
+        dataPoints: 0
     };
 
     componentDidMount() {
-        this.setState({ chartData: chartData });
+        this.fetchAndUpdate();
+        this.intervalId = setInterval(this.fetchAndUpdate, 1000);
+    }
+
+    componentWillUnmount() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+        }
+    }
+
+    fetchAndUpdate = async () => {
+        const data = await readMachineData();
+        if (!data) return;
+
+        this.setState(prevState => ({
+            Voltage: data.volt || 0,
+            PowerFactor: data.efficiency || 0.95,
+            RPM: data.rpm || this.getRandomFloat(1000, 1400),
+            currentList: [...prevState.currentList.slice(-49), data.overload || 0],
+            temperatureList: [...prevState.temperatureList.slice(-49), this.getRandomFloat(30, 43)],
+            vibrationList: [...prevState.vibrationList.slice(-49), this.getRandomFloat(48, 52)]
+        }));
+    };
+
+    getRandomFloat = (min, max) => {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
     toggleFilter = (filterName) => {
@@ -90,24 +118,48 @@ class RealTimeMonitoringPanel extends Component {
     };
 
     render() {
-        const { Voltage, RPM, PowerFactor, current, temperature, vibration, chartData } = this.state;
-
-        if (!chartData) return <p>Loading data...</p>;
-
-        const { currentData, temperatureData, vibrationData } = chartData;
+        const {
+            Voltage,
+            RPM,
+            PowerFactor,
+            current,
+            temperature,
+            vibration,
+            currentList,
+            temperatureList,
+            vibrationList
+        } = this.state;
 
         const lineSeries = [];
-        if (current) lineSeries.push({ label: "Current", data: currentData });
-        if (vibration) lineSeries.push({ label: "Vibration", data: vibrationData });
-        if (temperature) lineSeries.push({ label: "Temperature", data: temperatureData });
+        if (current) lineSeries.push({
+            label: "Current (A)",
+            data: currentList,
+            color: "#2563eb"
+        });
+        if (temperature) lineSeries.push({
+            label: "Temperature (°C)",
+            data: temperatureList,
+            color: "#dc2626"
+        });
+        if (vibration) lineSeries.push({
+            label: "Vibration (Hz)",
+            data: vibrationList,
+            color: "#16a34a"
+        });
+
         if (lineSeries.length === 0) {
-            lineSeries.push({ label: "Current", data: currentData });
-            if (!current) this.setState({ current: true });
+            lineSeries.push({
+                label: "Current (A)",
+                data: currentList,
+                color: "#2563eb"
+            });
         }
 
+        const xAxisData = Array.from({ length: Math.max(currentList.length, temperatureList.length, vibrationList.length) }, (_, i) => i + 1);
+
         const gauges = [
-            { label: "Voltage (V)", value: Voltage, maxValue: 14.4, startAngle: -90, endAngle: 90 },
-            { label: "RPM", value: RPM, maxValue: 7000, startAngle: -90, endAngle: 90 },
+            { label: "Voltage (V)", value: Voltage, maxValue: 250, startAngle: -90, endAngle: 90 },
+            { label: "RPM", value: RPM, maxValue: 1400, startAngle: -90, endAngle: 90 },
             { label: "Power Factor", value: PowerFactor * 100, maxValue: 100, startAngle: -90, endAngle: 90 },
         ];
 
@@ -139,29 +191,40 @@ class RealTimeMonitoringPanel extends Component {
                 <br />
 
                 <FiltersContainer>
-                    <FilterItem active={current} onClick={() => this.toggleFilter("current")}>Current</FilterItem>
-                    <FilterItem active={temperature} onClick={() => this.toggleFilter("temperature")}>Temperature</FilterItem>
-                    <FilterItem active={vibration} onClick={() => this.toggleFilter("vibration")}>Vibration</FilterItem>
+                    <FilterItem active={current} onClick={() => this.toggleFilter("current")}>
+                        Current
+                    </FilterItem>
+                    <FilterItem active={temperature} onClick={() => this.toggleFilter("temperature")}>
+                        Temperature
+                    </FilterItem>
+                    <FilterItem active={vibration} onClick={() => this.toggleFilter("vibration")}>
+                        Vibration
+                    </FilterItem>
                 </FiltersContainer>
 
                 <br />
                 <br />
 
-                {lineSeries.length > 0 && (
-                    <RealTimeMonitoringPanelContainer>
-                        <ChartWrapper>
-                            <LineChart
-                                xAxis={[{ data: lineSeries[0].data.map((d) => d.time) }]}
-                                series={lineSeries.map((series) => ({
-                                    data: series.data.map((d) => d.value),
-                                    label: series.label,
-                                }))}
-                                height={300}
-                            />
-                        </ChartWrapper>
-                        <FaultDetectionPanel fault={fault} />
-                    </RealTimeMonitoringPanelContainer>
-                )}
+                <RealTimeMonitoringPanelContainer>
+                    <ChartWrapper style={{ flex: 2 }}>
+                        <ChartTitle>Real-time Monitoring</ChartTitle>
+                        <LineChart
+                            xAxis={[{
+                                data: xAxisData,
+                                label: "Time Sequence",
+                                scaleType: 'point'
+                            }]}
+                            series={lineSeries.map((series) => ({
+                                data: series.data,
+                                label: series.label,
+                                color: series.color
+                            }))}
+                            height={400}
+                            margin={{ left: 70, right: 70, top: 30, bottom: 70 }}
+                        />
+                    </ChartWrapper>
+                    <FaultDetectionPanel fault={fault} />
+                </RealTimeMonitoringPanelContainer>
             </>
         );
     }

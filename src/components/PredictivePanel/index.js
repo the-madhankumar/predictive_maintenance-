@@ -115,7 +115,7 @@ class PredictivePanel extends Component {
         };
 
         const normalize = (value, min, max) => {
-            return Math.min(Math.max((value - min) / (max - min), 0), 1); // Clamp between 0 and 1
+            return Math.min(Math.max((value - min) / (max - min), 0), 1); 
         };
 
         const faultProbabilities = [
@@ -129,7 +129,7 @@ class PredictivePanel extends Component {
 
         const rulForecastValue = normalize(rul - (overload + bearing) * 0.1, ranges.rul.min, ranges.rul.max);
 
-        const anomalyScoreValue = normalize(Math.abs(rul - 85) / 85, 0, 1); // already a ratio, but clamped
+        const anomalyScoreValue = normalize(Math.abs(rul - 85) / 85, 0, 1); 
 
         const efficiencyValue = normalize((volt / (overload + 1)) * 0.85, 0, 1);
 
