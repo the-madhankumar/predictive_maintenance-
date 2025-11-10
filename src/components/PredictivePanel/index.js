@@ -81,7 +81,7 @@ class PredictivePanel extends Component {
 
     componentDidMount() {
         this.fetchAndUpdate();
-        this.interval = setInterval(this.fetchAndUpdate, 2000); // polling for new data
+        this.interval = setInterval(this.fetchAndUpdate, 2000); 
     }
 
     componentWillUnmount() {

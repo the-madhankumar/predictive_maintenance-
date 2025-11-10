@@ -24,6 +24,8 @@ class OverViewPanel extends Component {
     "Remaining Useful Life (Days)": 0,
   };
 
+  unsubscribe = null;
+
   thresholds = {
     "Bearing Wear (A)": {
       normal: [0, 3],
@@ -101,58 +103,69 @@ class OverViewPanel extends Component {
 
   getStatusColor = (parameter, value) => {
     const threshold = this.thresholds[parameter];
-    if (!threshold) return "#2563eb"; // default blue
+    if (!threshold) return "#2563eb";
 
     if (parameter === "Remaining Useful Life (Days)") {
-      if (value >= threshold.normal[0]) return "#10b981"; // green
-      if (value >= threshold.warning[0]) return "#f59e0b"; // amber
-      if (value >= threshold.moderate[0]) return "#f97316"; // orange
-      if (value >= threshold.high[0]) return "#ef4444"; // red
+      if (value >= threshold.normal[0]) return "#10b981";
+      if (value >= threshold.warning[0]) return "#f59e0b";
+      if (value >= threshold.moderate[0]) return "#f97316";
+      if (value >= threshold.high[0]) return "#ef4444";
       return "#7c2d12";
     }
 
-    if (value >= threshold.crucial[0]) return "#7c2d12"; // dark red
-    if (value >= threshold.high[0]) return "#ef4444"; // red
-    if (value >= threshold.moderate[0]) return "#f97316"; // orange
-    if (value >= threshold.warning[0]) return "#f59e0b"; // amber
-    if (value >= threshold.normal[0]) return "#10b981"; // green
+    if (value >= threshold.crucial[0]) return "#7c2d12";
+    if (value >= threshold.high[0]) return "#ef4444";
+    if (value >= threshold.moderate[0]) return "#f97316";
+    if (value >= threshold.warning[0]) return "#f59e0b";
+    if (value >= threshold.normal[0]) return "#10b981";
 
     return "#6b7280";
   };
 
-  async componentDidMount() {
+  intervalId = null;
+
+  componentDidMount() {
+    this.fetchAndUpdate();
+    this.intervalId = setInterval(this.fetchAndUpdate, 1000);
+  }
+
+  componentWillUnmount() {
+    if (this.intervalId) clearInterval(this.intervalId);
+  }
+
+  fetchAndUpdate = async () => {
     const data = await readMachineData();
     if (!data) return;
 
     this.setState({
-      "Bearing Wear (A)": data.bearing,
-      "Rotor bar crack (Hz)": data.rotor,
-      "Overload (A)": data.overload,
-      "Stator fault (THD)": data.stator,
-      "Shaft misalignment (CF)": data.shaft,
-      "Voltage instability (V)": data.volt,
+      "Bearing Wear (A)": data.bearing || 0,
+      "Rotor bar crack (Hz)": data.rotor || 0,
+      "Overload (A)": data.overload || 0,
+      "Stator fault (THD)": data.stator || 0,
+      "Shaft misalignment (CF)": data.shaft || 0,
+      "Voltage instability (V)": data.volt || 0,
       "Efficiency loss (PF)": data.efficiency || 0.95,
-      "Mechanical jam (A)": data.mjam,
-      "Remaining Useful Life (Days)": data.rul,
+      "Mechanical jam (A)": data.mjam || 0,
+      "Remaining Useful Life (Days)": data.rul || 0,
     });
-  }
+  };
+
 
   render() {
     return (
       <>
-      <StatusLegend/>
-      <PanelContainer>
-        
-        {Object.entries(this.state).map(([key, value], index) => (
-          <KPICard 
-            key={index} 
-            TextValue={key} 
-            NumericalValue={value}
-            color={this.getStatusColor(key, value)}
-          />
-        ))}
-      </PanelContainer></>
-    
+        <StatusLegend />
+        <PanelContainer>
+          {Object.entries(this.state).map(([key, value], index) => (
+            <KPICard
+              key={index}
+              TextValue={key}
+              NumericalValue={value}
+              color={this.getStatusColor(key, value)}
+            />
+          ))}
+        </PanelContainer>
+      </>
     );
   }
 }
