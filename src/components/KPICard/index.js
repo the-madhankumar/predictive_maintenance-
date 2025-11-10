@@ -1,30 +1,39 @@
 import styled from "styled-components";
 
 const CardContainer = styled.div`
-  background-color: #f8fafc;
-  font-family: 'Roboto';
+  flex: 1;
+  min-width: 140px;
+  background: linear-gradient(135deg, #eef2ff, #d5dbf1ff);
   padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
   text-align: center;
-  width: 180px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-left: 5px solid ${props => props.color || "#2563eb"};
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+  }
 `;
 
 const Text = styled.p`
   font-weight: 600;
   color: #111827;
+  margin-bottom: 8px;
 `;
 
 const Value = styled.p`
-  font-size: 1.2rem;
-  color: #2563eb;
+  font-size: 1.4rem;
+  color: ${props => props.color || "#2563eb"};
+  font-weight: 700;
 `;
 
-const KPICard = ({ TextValue, NumericalValue }) => {
+const KPICard = ({ TextValue, NumericalValue, color }) => {
   return (
-    <CardContainer>
+    <CardContainer color={color}>
       <Text>{TextValue}</Text>
-      <Value>{NumericalValue}</Value>
+      <Value color={color}>{NumericalValue}</Value>
     </CardContainer>
   );
 };
