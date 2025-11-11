@@ -81,7 +81,7 @@ class PredictivePanel extends Component {
 
     componentDidMount() {
         this.fetchAndUpdate();
-        this.interval = setInterval(this.fetchAndUpdate, 2000); 
+        this.interval = setInterval(this.fetchAndUpdate, 2000);
     }
 
     componentWillUnmount() {
@@ -115,7 +115,7 @@ class PredictivePanel extends Component {
         };
 
         const normalize = (value, min, max) => {
-            return Math.min(Math.max((value - min) / (max - min), 0), 1); 
+            return Math.min(Math.max((value - min) / (max - min), 0), 1);
         };
 
         const faultProbabilities = [
@@ -129,7 +129,7 @@ class PredictivePanel extends Component {
 
         const rulForecastValue = normalize(rul - (overload + bearing) * 0.1, ranges.rul.min, ranges.rul.max);
 
-        const anomalyScoreValue = normalize(Math.abs(rul - 85) / 85, 0, 1); 
+        const anomalyScoreValue = normalize(Math.abs(rul - 85) / 85, 0, 1);
 
         const efficiencyValue = normalize((volt / (overload + 1)) * 0.85, 0, 1);
 
@@ -144,9 +144,9 @@ class PredictivePanel extends Component {
             rul: [...prevState.rul, rul],
             volt: [...prevState.volt, volt],
             faultProbabilities,
-            rulForecast: [...prevState.rulForecast, rulForecastValue],
-            anomalyScores: [...prevState.anomalyScores, anomalyScoreValue],
-            efficiency: [...prevState.efficiency, efficiencyValue],
+            rulForecast: [...prevState.rulForecast.slice(-49), rulForecastValue],
+            anomalyScores: [...prevState.anomalyScores.slice(-49), anomalyScoreValue],
+            efficiency: [...prevState.efficiency.slice(-49), efficiencyValue],
         }));
     };
 
