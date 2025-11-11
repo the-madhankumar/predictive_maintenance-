@@ -135,7 +135,6 @@ class OverViewPanel extends Component {
 
   fetchAndUpdate = async () => {
     const data = await readMachineData();
-    console.log(data);
     if (!data) return;
 
     this.setState({
